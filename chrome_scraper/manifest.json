@@ -1,12 +1,12 @@
 {
   "manifest_version": 2,
   "name": "Namii",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "permissions": [
     "storage",
     "tabs",
     "clipboardRead",
-    "https://*.namii.ai/*"
+    "<all_urls>"
   ],
   "background": {
     "scripts": [ "background.js" ]

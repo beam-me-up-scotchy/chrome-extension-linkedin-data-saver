@@ -492,74 +492,18 @@ function scrape_init() {
     }
 }
 
+var url = undefined;
+var headers = undefined;
+
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
         if (request.message === "scrape button clicked") {
+            url = request.url;
+            headers = request.headers;
             scrape_init();
         }
     }
 )
-
-//chrome.runtime.onMessage.addListener(
-//    function (request, sender, sendResponse) {
-//        if (request.message === "scrape button clicked") {
-//            console.log("received loud and clear!");
-
-//            if (document.location.href.indexOf("linkedin.com/in/") > -1) {
-//                $("html, body").animate({
-//                    scrollTop: $(
-//                        'html, body').get(0).scrollHeight
-//                }, getRandomInt(2000, 5000)).promise().then(function () {
-//                    if (getElementsByXpath('.//div[contains(@class,"pv-deferred-area__loader")]').snapshotLength == 0) {
-//                        console.log("Finished loading!");
-//                        expand_stuff(scrape_LI);
-//                    } else {
-//                        li_spinner_observer();
-//                    }
-//                    $('html,body').animate({ scrollTop: 0 }, getRandomInt(2000, 5000));
-//                });
-//            } else if (document.location.href.indexOf("linkedin.com/company/") > -1) {
-//                clickOnce('//a[contains(@href, "/about/")]');
-//                $("html, body").animate({
-//                    scrollTop: $(
-//                        'html, body').get(0).scrollHeight
-//                }, getRandomInt(2000, 5000)).promise().then(function () {
-//                    if (getElementsByXpath('.//div[contains(@class,"artdeco-loader")]').snapshotLength == 0) {
-//                        console.log("Finished loading!");
-//                        expand_stuff(scrape_company);
-//                    } else {
-//                        company_about_spinner_observer();
-//                    }
-//                    $('html,body').animate({ scrollTop: 0 }, getRandomInt(2000, 5000));
-//                });
-//            } else if (document.location.href.indexOf("linkedin.com/sales/people/") > -1) {
-//                console.log("yes to profile scraper condition");
-//                $("html, body").animate({
-//                    scrollTop: $(
-//                        'html, body').get(0).scrollHeight
-//                }, getRandomInt(2000, 5000)).promise().then(function () {
-//                    $('html,body').animate({ scrollTop: 0 }, getRandomInt(2000, 5000));
-//                    if (getElementsByXpath('.//div[contains(@class,"artdeco-loader")]').snapshotLength == 0) {
-//                        console.log("No loading time!");
-//                        expand_stuff(sn_in_get_ln_url);
-//                    } else {
-//                        sn_LI_spinner_observer();
-//                    }
-//                });
-//            } else if (document.location.href.indexOf("linkedin.com/sales/company/") > -1) {
-//                console.log("yes to company scraper condition");
-//                if (getElementsByXpath('.//div[contains(@class,"artdeco-loader")]').snapshotLength == 0) {
-//                    console.log("No loading time!");
-//                    expand_stuff(sn_company_get_ln_url);
-//                } else {
-//                    sn_company_spinner_observer();
-//                }
-//            } else {
-//                console.log("Not able to be scraped.")
-//            }
-//        }
-//    }
-//)
 
 function li_spinner_observer() {
     var observation_node = getElementByXpath('//div[@class = "profile-detail"]');
@@ -619,8 +563,7 @@ function scrape_LI() {
     contact_info['Address'] = "";
     in_payload["Contact info"] = contact_info;
 
-    var url = "https://app.namii.ai/version-live/api/1.1/wf/profile";
-    chrome.runtime.sendMessage({ message: "make_api_call", method: "POST", url: url, token: "Stored", payload: in_payload });
+    chrome.runtime.sendMessage({ message: "make_api_call", method: "POST", url: url, headers: headers, payload: in_payload });
 }
 
 function scrape_company() {
@@ -640,8 +583,7 @@ function scrape_company() {
     company_payload["Founded"] = trycatcherror(company_get_company_founded, document, "Error getting company founded.");
     company_payload["Specialties"] = trycatcherror(company_get_company_specialties, document, "Error getting company specialties.");
 
-    var url = "https://app.namii.ai/version-live/api/1.1/wf/company";
-    chrome.runtime.sendMessage({ message: "make_api_call", method: "POST", url: url, token: "Stored", payload: company_payload });
+    chrome.runtime.sendMessage({ message: "make_api_call", method: "POST", url: url, headers: headers, payload: company_payload });
 }
 
 
@@ -756,16 +698,7 @@ function sn_scrape_LI(LinkedIn_URL) {
 
     console.log("Finished scraping stuff");
 
-    chrome.storage.sync.get("user_email", function (user_email) {
-        if (user_email.user_email === "REDACTED") {
-            var url = "https://app.namii.ai/version-test/api/1.1/wf/profile_salesnav";
-            chrome.runtime.sendMessage({ message: "make_api_call", method: "POST", url: url, token: "Stored", payload: in_payload });
-        } else {
-            var url = "https://app.namii.ai/version-live/api/1.1/wf/profile_salesnav";
-            chrome.runtime.sendMessage({ message: "make_api_call", method: "POST", url: url, token: "Stored", payload: in_payload });
-            console.log("We sent the message");
-        }
-    });
+    chrome.runtime.sendMessage({ message: "make_api_call", method: "POST", url: url, headers: headers, payload: in_payload });
 }
 
 function sn_scrape_company(LinkedIn_URL) {
@@ -797,15 +730,7 @@ function sn_scrape_company(LinkedIn_URL) {
     company_payload["Size"] = trycatcherror(sn_company_get_company_size, document, "Error getting company size.");
     company_payload["Employees"] = trycatcherror(sn_company_get_company_employees, document, "Error getting company employees.");
 
-    chrome.storage.sync.get("user_email", function (user_email) {
-        if (user_email.user_email === "REDACTED") {
-            var url = "https://app.namii.ai/version-test/api/1.1/wf/company_salesnav";
-            chrome.runtime.sendMessage({ message: "make_api_call", method: "POST", url: url, token: "Stored", payload: company_payload });
-        } else {
-            var url = "https://app.namii.ai/version-live/api/1.1/wf/company_salesnav";
-            chrome.runtime.sendMessage({ message: "make_api_call", method: "POST", url: url, token: "Stored", payload: company_payload });
-        }
-    });
+    chrome.runtime.sendMessage({ message: "make_api_call", method: "POST", url: url, headers: headers, payload: company_payload });
 }
 
 AUTOSCRAPE = false;
