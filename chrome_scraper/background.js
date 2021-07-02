@@ -139,7 +139,8 @@ function callback_general(xhttp, error=false) {
     if (error) {
         console.log("error");
     } else {
-        response_data = JSON.parse(xhttp.responseText);
+        //response_data = JSON.parse(xhttp.responseText);
+        response_data = xhttp.responseText;
         console.log("Posted data - great success!");
         console.log(response_data);
         chrome.runtime.sendMessage({ message: "Data saved to server!" });
